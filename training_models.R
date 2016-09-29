@@ -2,9 +2,11 @@
 rm(list= ls())
 
 # set working directory 
-setwd("~/Documents/r_programming/interest_rate/files/")
+setwd("~/R Programming/interest_rate/files/")
 
 # Load all Libraries 
+library(VIM)
+library(mice)
 library(clusterSim)
 library(caret)
 library(corrplot)
@@ -24,10 +26,20 @@ summary(dat)
 
 # Pre-Processing data 
 # Removing un-necessary data from data set 
-# no. of missing variables
+# percentage of missing variables
 na_df <- data.frame(round(apply(is.na(dat), 2, sum) / nrow(dat), digits = 2))
 na_df <- t(na_df)
 row.names(na_df) <- "% missing values"
+na_df
+
+# Missing value analysis
+md.pattern(dat)
+
+# removing variables without missing values
+miss <- data.frame(apply(is.na(dat), 2, sum))
+miss <- ifelse(miss > 1, TRUE, FALSE)
+aggr(dat[, miss], prop = T, numbers = T)
+
 
 # Removing data which is not important for intrest rate calculation
 dat <- dat[, c(-2, -3, -10, -16, -18, -19, -25, -26)]
@@ -145,10 +157,10 @@ for (i in 1:4) {
 }
 
 # Normalise the data by min-max method
-dat$X1 = as.character(dat$X1)
+dat$X1 <- as.character(dat$X1)
 nums <- sapply(dat, is.numeric)
 dat[, nums] <- data.Normalization(dat[, nums], type = "n4") 
-dat$X1 = as.numeric(dat$X1)
+dat$X1 <- as.numeric(dat$X1)
 
 #Build correlation plot between nnumeric variables
 corrplot(cor(dat[, nums]), method = "number", order = "hclust")
@@ -234,7 +246,7 @@ save(model3,file = "~/Documents/r_programming/interest_rate/output/regression_tr
 out1 <- capture.output(summary(model2))
 cat("Regression Model test-1",out1,file = "~/Documents/r_programming/interest_rate/output/
     model_summary.txt",sep = "\n", append = F)
-out2 <- capture.output(summary(model2))
+out2 <- capture.output(summary(model3))
 cat("Regression Model test-2",out2,file = "~/Documents/r_programming/interest_rate/output/
     model_summary.txt",sep = "\n",append = T)
 
@@ -244,10 +256,10 @@ source("~/Documents/r_programming/interest_rate/R/test.R")
 
 # Predict target variable 
 pred_1 <- predict(model2, test)
-pred_2 <- predict(model2, test)
+pred_2 <- predict(model3, test)
 
 pred_lm = cbind(test_id, pred_1)
 pred_rpart = cbind(test_id, pred_2)
 
-write.csv(pred_lm, "~/Documents/r_programming/interest_rate/linear.model.pred.csv")
-write.csv(pred_rpart, "~/Documents/r_programming/interest_rate/rpart.model.pred.csv")
+write.csv(pred_lm, "~/Documents/r_programming/interest_rate/output/linear.model.pred.csv")
+write.csv(pred_rpart, "~/Documents/r_programming/interest_rate/output/rpart.model.pred.csv")
